@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import { X, Search, Code, FormInput, Sliders, Shield, Terminal, Cloud, Monitor, Info, RefreshCw, Download, ExternalLink } from 'lucide-react';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -154,7 +154,7 @@ export function SettingsModal({ onClose }: { onClose?: () => void }) {
                 {viewMode === 'ui' ? <Code size={13} /> : <FormInput size={13} />}<span>{viewMode === 'ui' ? t('jsonView') : t('uiView')}</span>
               </button>
             )}
-            <button onClick={onClose} style={closeBtnStyle} aria-label={t('close')}><X size={18} /></button>
+            <button onClick={close} style={closeBtnStyle} aria-label={t('close')}><X size={18} /></button>
           </div>
         </div>
 

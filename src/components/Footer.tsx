@@ -1,11 +1,14 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useLayout } from '../contexts/LayoutContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { useTranslation } from '../hooks/useTranslation';
 
 export default React.memo(function Footer() {
   const t = useTranslation('footer');
   const { footerCollapsed: isCollapsed, setFooterCollapsed: setIsCollapsed } = useLayout();
+  const { theme } = useSettings();
+  const isDark = theme === 'dark';
   const year = new Date().getFullYear();
 
   if (isCollapsed) {
@@ -43,8 +46,8 @@ export default React.memo(function Footer() {
         <div style={{ display: 'flex', alignItems: 'center', borderLeft: '1px solid var(--border-color)', paddingLeft: '16px' }}>
           <img src="images/digital-bd-logo.svg" alt="Digital Bangladesh Logo" style={{ width: '42px', height: '42px', marginRight: '8px' }} />
           <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', lineHeight: '1.2' }}>
-            <span style={{ fontWeight: 'bold', color: 'var(--gov-green-dark)', fontSize: '12px', letterSpacing: '-0.3px' }}>{t('digitalBdText')}</span>
-            <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{t('digitalBdSub')}</span>
+            <span style={{ fontWeight: 'bold', color: isDark ? '#4ade80' : 'var(--gov-green-dark)', fontSize: '12px', letterSpacing: '-0.3px' }}>{t('digitalBdText')}</span>
+            <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>{t('digitalBdSub')}</span>
           </div>
         </div>
       </div>

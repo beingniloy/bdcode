@@ -13,7 +13,7 @@ import {
 } from '../utils';
 import initialFiles from '../demoData';
 
-const initialTabs: Tab[] = [{ name: 'à¦¸à§à¦¬à¦¾à¦—à¦¤à¦®', path: 'welcome', isDirty: false }];
+const initialTabs: Tab[] = [{ name: '\u09B8\u0CD7\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE', path: 'welcome', isDirty: false }];
 
 interface ClipboardData {
   type: 'copy' | 'cut';
@@ -54,7 +54,6 @@ interface FileSystemContextValue {
   handlePasteFile: (targetFolderPath?: string) => Promise<void>;
   handleRun: () => void;
   handleCreateVirtualFile: (path: string, name: string, content: string) => void;
-  // Undo/redo
   handleUndo: () => void;
   handleRedo: () => void;
   undoStackDepths: { undo: number; redo: number };
@@ -75,26 +74,23 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const { setPublishModalOpen } = useModal();
 
   const [files, setFiles] = useState<FileSystemItem[]>(initialFiles);
-  const [projectName, setProjectName] = useState<string>('à¦†à¦®à¦¾à¦°_à¦ªà§à¦°à¦•à¦²à§à¦ª');
+  const [projectName, setProjectName] = useState<string>('\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA');
   const [openTabs, setOpenTabs] = useState<Tab[]>(initialTabs);
   const [activeFile, setActiveFile] = useState<string | null>('welcome');
   const [terminalLines, setTerminalLines] = useState<TerminalLine[]>([
     { text: navigator.userAgent.includes('Win') ? 'Microsoft Windows [Version 10.0.22631.3447]' : navigator.userAgent.includes('Mac') ? 'macOS [zsh]' : 'Linux [bash]', type: 'system' },
     { text: navigator.userAgent.includes('Win') ? '(c) Microsoft Corporation. All rights reserved.' : '', type: 'system' },
     { text: '', type: 'system' },
-    { text: navigator.userAgent.includes('Win') ? 'C:\\à¦†à¦®à¦¾à¦°_à¦ªà§à¦°à¦•à¦²à§à¦ª> ' : '~/à¦†à¦®à¦¾à¦°_à¦ªà§à¦°à¦•à¦²à§à¦ª$ ', type: 'system' },
+    { text: navigator.userAgent.includes('Win') ? 'C:\\\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA> ' : '~/\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA$ ', type: 'system' },
   ]);
   const [clipboard, setClipboard] = useState<ClipboardData | null>(null);
-  // Undo/redo: persisted content history keyed by file path
   const [undoHistory, setUndoHistory] = useState<UndoStack>({});
 
-  // Push old content to undo stack before a change
   const pushHistory = useCallback((path: string, oldContent: string) => {
     if (!path || path === 'welcome' || path.startsWith('docs/')) return;
     if (!oldContent) return;
     setUndoHistory(prev => {
       const entry = prev[path] || { past: [], future: [] };
-      // Skip duplicate consecutive entries (Monaco fires onChange rapidly)
       const lastPast = entry.past[entry.past.length - 1];
       if (lastPast === oldContent) return prev;
       return {
@@ -107,7 +103,6 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // â”€â”€ Dynamic Window Title (VS Code style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const appTitle = 'Bangladesh Code';
     let title: string;
@@ -166,18 +161,16 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
     return { undo: entry?.past.length || 0, redo: entry?.future.length || 0 };
   }, [undoHistory, activeFile]);
 
-  // Sync Welcome tab name with active language
   useEffect(() => {
     setOpenTabs(prev =>
       prev.map(tab =>
         tab.path === 'welcome'
-          ? { ...tab, name: language === 'bn' ? 'à¦¸à§à¦¬à¦¾à¦—à¦¤à¦®' : 'Welcome' }
+          ? { ...tab, name: language === 'bn' ? '\u09B8\u0CD7\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE' : 'Welcome' }
           : tab
       )
     );
   }, [language]);
 
-  // Load workspace files in desktop mode
   const loadWorkspace = useCallback(async () => {
     if (window.electronAPI) {
       try {
@@ -186,7 +179,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
           setFiles(result);
         } else {
           setFiles(result.tree);
-          const folderName = result.path.split(/[/\\]/).pop() || 'à¦†à¦®à¦¾à¦°_à¦ªà§à¦°à¦•à¦²à§à¦ª';
+          const folderName = result.path.split(/[/\\]/).pop() || '\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA';
           setProjectName(folderName);
         }
       } catch (err) {
@@ -201,7 +194,6 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
     }
   }, [loadWorkspace]);
 
-  // Problems count (static analysis) â€” matches BottomPanel.tsx patterns
   const problemsCount = useMemo(() => {
     let errors = 0;
     let warnings = 0;
@@ -234,15 +226,13 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
     return { errors, warnings };
   }, [files]);
 
-  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
   const handleFileSelect = useCallback(async (path: string) => {
     if (path === 'welcome') {
       setActiveFile('welcome');
       setOpenTabs(prev => {
         const exists = prev.some(t => t.path === 'welcome');
         if (!exists) {
-          return [...prev, { name: language === 'bn' ? 'à¦¸à§à¦¬à¦¾à¦—à¦¤à¦®' : 'Welcome', path: 'welcome', isDirty: false }];
+          return [...prev, { name: language === 'bn' ? '\u09B8\u0CD7\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE' : 'Welcome', path: 'welcome', isDirty: false }];
         }
         return prev;
       });
@@ -307,7 +297,6 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   }, [activeFile]);
 
   const handleContentChange = useCallback((path: string, newContent: string) => {
-    // Save old content to undo history before applying change
     const oldNode = findFileInTree(files, path);
     const oldContent = oldNode?.content;
     if (oldContent !== undefined && oldContent !== newContent) {
@@ -381,7 +370,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
         const result = await window.electronAPI.selectFolder();
         if (result) {
           setFiles(result.tree);
-          const folderName = result.path.split(/[/\\]/).pop() || 'à¦†à¦®à¦¾à¦°_à¦ªà§à¦°à¦•à¦²à§à¦ª';
+          const folderName = result.path.split(/[/\\]/).pop() || '\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA';
           setProjectName(folderName);
           setOpenTabs([]);
           setTerminalLines([]);
@@ -409,7 +398,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const handleNewFile = useCallback(async () => {
     const defaultName = `new_file_${openTabs.length + 1}.html`;
     const fileName = await showPrompt(
-      language === 'bn' ? 'à¦¨à¦¤à§à¦¨ à¦«à¦¾à¦‡à¦²à§‡à¦° à¦¨à¦¾à¦® à¦¦à¦¿à¦¨:' : 'Enter new file name:',
+      language === 'bn' ? '\u09A8\u09A4\u09C1\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u09A8\u09BE\u09AE \u09A6\u09BF\u09A8:' : 'Enter new file name:',
       defaultName
     );
     if (!fileName) return;
@@ -437,7 +426,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
 
   const handleNewFolder = useCallback(async () => {
     const folderName = await showPrompt(
-      language === 'bn' ? 'à¦¨à¦¤à§à¦¨ à¦«à§‹à¦²à§à¦¡à¦¾à¦°à§‡à¦° à¦¨à¦¾à¦® à¦¦à¦¿à¦¨:' : 'Enter new folder name:',
+      language === 'bn' ? '\u09A8\u09A4\u09C1\u09A8 \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09A8\u09BE\u09AE \u09A6\u09BF\u09A8:' : 'Enter new folder name:',
       'new_folder'
     );
     if (!folderName) return;
@@ -464,7 +453,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const handleNewFileInFolder = useCallback(async (folderPath: string) => {
     const defaultName = `new_file_${openTabs.length + 1}.html`;
     const fileName = await showPrompt(
-      language === 'bn' ? 'à¦¨à¦¤à§à¦¨ à¦«à¦¾à¦‡à¦²à§‡à¦° à¦¨à¦¾à¦® à¦¦à¦¿à¦¨:' : 'Enter new file name:',
+      language === 'bn' ? '\u09A8\u09A4\u09C1\u09A8 \u09AB\u09BE\u0987\u09B2\u09C7\u09B0 \u09A8\u09BE\u09AE \u09A6\u09BF\u09A8:' : 'Enter new file name:',
       defaultName
     );
     if (!fileName) return;
@@ -506,7 +495,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
 
   const handleNewFolderInFolder = useCallback(async (folderPath: string) => {
     const folderName = await showPrompt(
-      language === 'bn' ? 'à¦¨à¦¤à§à¦¨ à¦«à§‹à¦²à§à¦¡à¦¾à¦°à§‡à¦° à¦¨à¦¾à¦® à¦¦à¦¿à¦¨:' : 'Enter new folder name:',
+      language === 'bn' ? '\u09A8\u09A4\u09C1\u09A8 \u09AB\u09CB\u09B2\u09CD\u09A1\u09BE\u09B0\u09C7\u09B0 \u09A8\u09BE\u09AE \u09A6\u09BF\u09A8:' : 'Enter new folder name:',
       'new_folder'
     );
     if (!folderName) return;
@@ -548,7 +537,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
     if (
       !(await showConfirm(
         language === 'bn'
-          ? `à¦†à¦ªà¦¨à¦¿ à¦•à¦¿ '${path}' à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¤à§‡ à¦šà¦¾à¦¨?`
+          ? `\u0986\u09AA\u09A8\u09BF \u0995\u09BF '${path}' \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09A4\u09C7 \u099A\u09BE\u09A8?`
           : `Are you sure you want to delete '${path}'?`
       ))
     )
@@ -571,7 +560,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const handleRenameFile = useCallback(async (path: string) => {
     const currentName = path.split('/').pop() || path;
     const newName = await showPrompt(
-      language === 'bn' ? 'à¦¨à¦¤à§à¦¨ à¦¨à¦¾à¦® à¦¦à¦¿à¦¨:' : 'Enter new name:',
+      language === 'bn' ? '\u09A8\u09A4\u09C1\u09A8 \u09A8\u09BE\u09AE \u09A6\u09BF\u09A8:' : 'Enter new name:',
       currentName
     );
     if (!newName) return;
@@ -626,7 +615,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
 
     setTerminalLines(prev => [
       ...prev,
-      { text: `C:\\à¦†à¦®à¦¾à¦°_à¦ªà§à¦°à¦•à¦²à§à¦ª> run ${fileName}`, type: 'input' },
+      { text: `C:\\\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA> run ${fileName}`, type: 'input' },
       { text: `[Run Mode]: Executing ${fileName}...${settings.sandboxEnabled ? ' (sandboxed)' : ''}`, type: 'system' },
     ]);
 
@@ -734,7 +723,6 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
         console.error('Paste failed:', err);
       }
     } else {
-      // Build children with corrected paths if pasting a folder
       const updatedChildren = clipboard.children && clipboard.isFolder
         ? updateChildPaths(clipboard.children, clipboard.path, finalPath)
         : clipboard.children;
@@ -748,14 +736,11 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
         children: updatedChildren,
       };
 
-      // Single atomic setFiles for both cut and copy
       setFiles(prev => {
         let tree = prev;
-        // For cut: remove original first
         if (clipboard.type === 'cut') {
           tree = deleteItemFromTree(tree, clipboard.path);
         }
-        // Add new item
         if (targetFolderPath) {
           const addToFolder = (items: FileSystemItem[]): FileSystemItem[] =>
             items.map(item => {

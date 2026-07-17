@@ -12,6 +12,17 @@ A fully-featured, bilingual code editor designed for the developers of Banglades
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <a href="#">
+    <img src="#" alt="Bangladesh Code Editor Screenshot" width="600" style="border-radius: 8px; border: 1px solid #333;" />
+  </a>
+</p>
+
+
+---
+
 ## What is Bangladesh Code?
 
 Bangladesh Code is an **official-grade code editor** built for the Government of Bangladesh. It combines the familiar power and interface of Visual Studio Code with a **fully Bengali-localized experience**, government branding, and built-in tools tailored for public sector software development.
@@ -99,12 +110,6 @@ Think of it as **VS Code, but ours** — বাংলায়, বাংলা�
 - **Documentation Panel** — Built-in coding guidelines and security directives
 - **Go to Line** — Navigate to any line number instantly
 - **Code Folding & Bracket Matching** — Advanced editor features built-in
-
----
-
-## Screenshots
-
-> Screenshots coming soon. The editor features a dark government-branded theme with Bengali UI elements.
 
 ---
 
@@ -274,7 +279,6 @@ bdcode/
 | `Delete`        | Delete (in explorer context menu) |
 
 ---
-
 
 ### Download
 

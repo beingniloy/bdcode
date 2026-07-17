@@ -35,7 +35,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "public/images/logo.png"
+      "icon": "public/images/logo.ico"
     },
     "mac": {
       "target": "dmg",
@@ -49,8 +49,8 @@
       "oneClick": false,
       "perMachine": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "public/images/logo.png",
-      "uninstallerIcon": "public/images/logo.png",
+      "installerIcon": "public/images/logo.ico",
+      "uninstallerIcon": "public/images/logo.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Bangladesh Code"

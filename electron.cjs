@@ -647,8 +647,44 @@ ipcMain.handle('is-pty', () => {
   return usingPty;
 });
 
+const ALLOWED_SHELLS = [
+  'powershell.exe',
+  'pwsh.exe',
+  'cmd.exe',
+  'powershell',
+  'pwsh',
+  'cmd',
+  '/bin/bash',
+  '/bin/zsh',
+  '/bin/sh',
+  '/usr/bin/bash',
+  '/usr/bin/zsh',
+  '/usr/bin/sh',
+  'bash',
+  'zsh',
+  'sh',
+  'c:/windows/system32/cmd.exe',
+  'c:/windows/system32/windowspowershell/v1.0/powershell.exe',
+  'c:/windows/syswow64/cmd.exe',
+  'c:/windows/syswow64/windowspowershell/v1.0/powershell.exe'
+];
+
+function isSafeShell(shellPath) {
+  if (typeof shellPath !== 'string') return false;
+  const normalized = shellPath.trim().replace(/\\/g, '/').toLowerCase();
+  if (normalized.includes('/')) {
+    return ALLOWED_SHELLS.includes(normalized);
+  }
+  return ALLOWED_SHELLS.includes(normalized);
+}
+
 ipcMain.handle('restart-shell', (event, shellPath) => {
   if (shellPath) {
+    // Secure validation to prevent process execution of arbitrary binaries (Command/Process Injection vulnerability)
+    if (!isSafeShell(shellPath)) {
+      console.warn(`Blocked unsafe shell override attempt: "${shellPath}"`);
+      return false;
+    }
     // Override the shell for this restart
     const savedShell = workspaceRoot;
     workspaceRoot = savedShell;
@@ -720,6 +756,34 @@ ipcMain.handle('git-cmd', (event, cmdArgs) => {
     if (!ALLOWED_GIT_CMDS.includes(subCmd)) {
       resolve({ success: false, stdout: '', stderr: `Blocked: '${subCmd}' is not allowed` });
       return;
+    }
+
+    // Check for dangerous options to prevent git argument injection
+    const dangerousPatterns = [
+      '--ext-diff',
+      '--textconv',
+      '--exec-path',
+      '--output',
+      '--pager',
+      '--upload-pack',
+      '--receive-pack',
+      '--config',
+      '--git-dir',
+      '--work-tree'
+    ];
+
+    for (const part of parts) {
+      const lowerPart = part.toLowerCase();
+      // Block exact short option matches that are dangerous (covers -c and -C case-insensitively)
+      if (lowerPart === '-c') {
+        resolve({ success: false, stdout: '', stderr: `Blocked: Dangerous option '${part}' is not allowed` });
+        return;
+      }
+      // Block any argument containing a dangerous pattern
+      if (dangerousPatterns.some(pattern => lowerPart.includes(pattern))) {
+        resolve({ success: false, stdout: '', stderr: `Blocked: Dangerous option '${part}' is not allowed` });
+        return;
+      }
     }
     
     // For commit, extract message without shell quoting artifacts

@@ -1,0 +1,588 @@
+/* Style Guide & Theme Variables */
+:root {
+  /* Colors */
+  --gov-green: #006A4E;
+  --gov-green-dark: #004d39;
+  --gov-green-light: #008C6A;
+  --gov-red: #F42A41;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --bg-dark-active: #e2e8f0;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --accent-color: #008C6A;
+  --danger-color: #dc2626;
+  --success-color: #16a34a;
+  --warning-color: #f59e0b;
+  --activity-bar-bg: #092c1e;
+  --activity-bar-active: #006A4E;
+  --activity-bar-text: #a7f3d0;
+  
+  /* Fonts */
+  --font-primary: 'Noto Sans Bengali', 'Segoe UI', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Layout sizing */
+  --title-bar-height: 48px;
+  --toolbar-height: 52px;
+  --status-bar-height: 24px;
+  --footer-height: 80px;
+}
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d2d;
+  --bg-dark-active: #37373d;
+  --text-primary: #e3e3e3;
+  --text-secondary: #cccccc;
+  --text-muted: #858585;
+  --border-color: #3c3c3c;
+  --accent-color: #00a87f;
+  --activity-bar-bg: #071f15;
+  --activity-bar-active: #004d39;
+  --activity-bar-text: #6ee7b7;
+}
+
+/* Base resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.app-container,
+.title-bar,
+.toolbar,
+.activity-bar,
+.status-bar,
+.footer,
+.workbench,
+.tree-item,
+.tab-close-btn,
+.preview-toggle-btn,
+.panel-btn,
+.icon-btn,
+.profile-box,
+.profile-dropdown-item,
+.toolbar-btn,
+.toolbar-action-btn,
+.open-editor-item,
+.welcome-screen,
+.right-sidebar,
+.sidebar-link-item,
+.security-link,
+.status-item,
+.close-btn,
+.link-arrow,
+.editor-tab,
+.tab-dirty-indicator,
+.modal-action-btn,
+.collapse-trigger-btn {
+  user-select: none;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Standard Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Global utility classes */
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.relative {
+  position: relative;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Keyframe animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Custom interactive controls styles */
+button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  outline: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-color);
+}
+
+/* ── VS Code-style resize handles ─────────────────────────────── */
+
+/* Vertical resize handle (left sidebar & right sidebar) */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 12px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 4px;
+  width: 4px;
+  height: 100%;
+  background-color: transparent;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 2px;
+}
+
+.resize-handle:hover::before {
+  background-color: color-mix(in srgb, var(--accent-color) 40%, transparent);
+}
+
+.resize-handle.active::before {
+  background-color: var(--accent-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-color) 50%, transparent);
+}
+
+/* Right sidebar handle — sticks to the LEFT edge */
+.resize-handle.right-sidebar-handle {
+  left: -2px;
+  right: auto;
+}
+
+.resize-handle.right-sidebar-handle::before {
+  left: 4px;
+}
+
+/* Horizontal (bottom panel) resize handle */
+.resize-handle-row {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  cursor: row-resize;
+  z-index: 20;
+}
+
+.resize-handle-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 100%;
+  height: 4px;
+  background-color: transparent;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 2px;
+}
+
+.resize-handle-row:hover::before {
+  background-color: color-mix(in srgb, var(--accent-color) 40%, transparent);
+}
+
+.resize-handle-row.active::before {
+  background-color: var(--accent-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-color) 50%, transparent);
+}
+
+/* Grid layout for full IDE */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.workbench {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Custom tooltips */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333333;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Premium Custom Checkbox styling */
+.custom-checkbox-container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  height: 20px;
+  width: 20px;
+}
+
+.custom-checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 18px;
+  width: 18px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-checkbox-container:hover input ~ .checkmark {
+  border-color: var(--accent-color);
+  background-color: var(--bg-dark-active);
+}
+
+.custom-checkbox-container input:checked ~ .checkmark {
+  background-color: var(--gov-green);
+  border-color: var(--gov-green);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.custom-checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.custom-checkbox-container .checkmark:after {
+  left: 5px;
+  top: 1.5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* BottomPanel styles */
+.panel-btn:hover {
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+}
+
+/* EditorArea styles */
+.welcome-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent-color);
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.welcome-link-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  transform: translateX(4px);
+}
+.tab-close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+.preview-toggle-btn:hover {
+  background: var(--bg-secondary) !important;
+  border-color: var(--gov-green) !important;
+}
+
+/* Toolbar styles */
+.toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+.toolbar-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s;
+}
+.toolbar-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+.profile-box:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+.profile-dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+.run-btn-highlight {
+  background: rgba(22, 163, 74, 0.7);
+  border: 1px solid rgba(22, 163, 74, 0.9);
+}
+.run-btn-highlight:hover {
+  background: rgba(22, 163, 74, 0.95) !important;
+}
+.publish-btn-glow {
+  background: rgba(245, 158, 11, 0.7);
+  border: 1px solid rgba(245, 158, 11, 0.9);
+}
+.publish-btn-glow:hover {
+  background: rgba(245, 158, 11, 0.95) !important;
+}
+
+/* StatusBar styles */
+.status-item:hover {
+  opacity: 0.8;
+}
+
+/* SidebarPanels styles */
+.doc-nav-item:hover {
+  background: var(--bg-dark-active) !important;
+  transform: translateX(4px);
+}
+.doc-nav-item:hover .doc-chevron {
+  color: var(--gov-green);
+}
+.search-result-item:hover {
+  background: var(--bg-secondary);
+}
+.refresh-btn:hover {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+.run-panel-action:hover {
+  opacity: 0.9;
+}
+
+/* Footer styles */
+.footer-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-link:hover {
+  color: var(--gov-green);
+  text-decoration: underline;
+}
+.collapse-trigger-btn:hover {
+  color: var(--gov-green) !important;
+}
+
+/* RightSidebar styles */
+.close-btn:hover {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+.sidebar-link-item:hover {
+  background: var(--bg-secondary);
+  color: var(--gov-green) !important;
+}
+.sidebar-link-item:hover .link-arrow {
+  transform: translateX(2px);
+  opacity: 1 !important;
+  color: var(--gov-green);
+}
+.security-link:hover {
+  text-decoration: underline;
+}
+
+/* ActivityBar styles */
+.activity-item:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.03);
+  color: white !important;
+}
+
+/* TitleBar styles */
+.hover-link:hover {
+  color: var(--gov-green) !important;
+}
+.nav-portal-btn:hover {
+  background: var(--bg-dark-active) !important;
+  border-color: var(--gov-green) !important;
+}
+.dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+.win-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+.win-btn:hover {
+  background: var(--bg-secondary);
+}
+.win-close:hover {
+  background: var(--gov-red) !important;
+  color: white !important;
+}
+
+/* ExplorerSidebar styles */
+.tree-item:hover {
+  background: var(--bg-secondary) !important;
+}
+.tree-item:hover .tree-actions {
+  display: flex !important;
+}
+.tree-item:hover .modified-dot {
+  display: none !important;
+}
+.icon-btn:hover {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+.open-editor-item:hover {
+  background: var(--bg-secondary) !important;
+}
+
+/* Context Menu styles */
+@keyframes ctx-menu-fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.context-menu {
+  backdrop-filter: blur(8px);
+}
+
+.context-menu-item {
+  border-radius: 3px;
+  margin: 0 4px;
+}
+
+.sponsor-btn:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
+  box-shadow: 0 2px 8px rgba(231,76,60,0.5) !important;
+  transform: translateY(-1px);
+}
+

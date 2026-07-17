@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+.freebuff/
+.agent/
+*.log
+.env
+.env.*
+!.env.example
+.vite/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+out/
+*.local

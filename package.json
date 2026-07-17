@@ -1,0 +1,79 @@
+{
+  "name": "bdcode",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron.cjs",
+  "author": "Bangladesh Code",
+  "description": "Bangladesh Code — বাংলাদেশ সরকার কোড সম্পাদক",
+  "scripts": {
+    "dev": "vite",
+    "desktop": "node run-dev.js",
+    "build": "tsc && vite build",
+    "lint": "tsc",
+    "preview": "vite preview",
+    "build:win": "vite build && electron-builder --win",
+    "build:mac": "vite build && electron-builder --mac",
+    "build:linux": "vite build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "io.bdcode.app",
+    "productName": "Bangladesh Code",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.cjs",
+      "preload.cjs"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "beingniloy",
+      "repo": "bdcode"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/images/logo.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/images/logo.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "public/images/logo.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/images/logo.png",
+      "uninstallerIcon": "public/images/logo.png",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Bangladesh Code"
+    }
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "electron-updater": "^6.3.9",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.469.0",
+    "node-pty": "^1.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/jszip": "^3.4.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "electron": "^34.0.2",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

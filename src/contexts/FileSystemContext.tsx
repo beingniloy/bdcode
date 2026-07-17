@@ -86,6 +86,10 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const [clipboard, setClipboard] = useState<ClipboardData | null>(null);
   const [undoHistory, setUndoHistory] = useState<UndoStack>({});
 
+  // Performance Cache: Map each immutable FileSystemItem reference to its static analysis problem count
+  // Avoids re-computing empty block, console.log, TODO, and FIXME warnings on unmodified files
+  const problemsCountCache = useMemo(() => new WeakMap<FileSystemItem, { errors: number; warnings: number }>(), []);
+
   const pushHistory = useCallback((path: string, oldContent: string) => {
     if (!path || path === 'welcome' || path.startsWith('docs/')) return;
     if (!oldContent) return;
@@ -202,29 +206,45 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
       for (const item of items) {
         if (item.isFolder && item.children) {
           scan(item.children);
-        } else if (!item.isFolder && item.content) {
-          const lines = item.content.split('\n');
-          for (const lineText of lines) {
-            if (/\{\s*\}/.test(lineText) && !lineText.includes('=>') && !lineText.includes('const')) {
-              warnings++;
-            }
-            if (lineText.includes('console.log')) {
-              warnings++;
-            }
-            if (lineText.includes('TODO')) {
-              warnings++;
-            }
-            if (lineText.includes('FIXME')) {
-              warnings++;
+        } else if (!item.isFolder) {
+          // Check WeakMap cache first
+          const cached = problemsCountCache.get(item);
+          if (cached) {
+            errors += cached.errors;
+            warnings += cached.warnings;
+            continue;
+          }
+
+          let fileErrors = 0;
+          let fileWarnings = 0;
+          if (item.content) {
+            const lines = item.content.split('\n');
+            for (const lineText of lines) {
+              if (/\{\s*\}/.test(lineText) && !lineText.includes('=>') && !lineText.includes('const')) {
+                fileWarnings++;
+              }
+              if (lineText.includes('console.log')) {
+                fileWarnings++;
+              }
+              if (lineText.includes('TODO')) {
+                fileWarnings++;
+              }
+              if (lineText.includes('FIXME')) {
+                fileWarnings++;
+              }
             }
           }
+
+          problemsCountCache.set(item, { errors: fileErrors, warnings: fileWarnings });
+          errors += fileErrors;
+          warnings += fileWarnings;
         }
       }
     };
 
     scan(files);
     return { errors, warnings };
-  }, [files]);
+  }, [files, problemsCountCache]);
 
   const handleFileSelect = useCallback(async (path: string) => {
     if (path === 'welcome') {

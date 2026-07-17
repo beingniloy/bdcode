@@ -15,11 +15,10 @@ A fully-featured, bilingual code editor designed for the developers of Banglades
 ## Screenshots
 
 <p align="center">
-  <a href="#">
-    <img src="#" alt="Bangladesh Code Editor Screenshot" width="600" style="border-radius: 8px; border: 1px solid #333;" />
+  <a href="public/images/banner.png">
+    <img src="public/images/banner.png" alt="Bangladesh Code Editor Screenshot" width="600" style="border-radius: 8px; border: 1px solid #333;" />
   </a>
 </p>
-
 
 ---
 

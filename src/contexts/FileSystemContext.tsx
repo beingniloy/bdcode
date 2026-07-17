@@ -13,7 +13,7 @@ import {
 } from '../utils';
 import initialFiles from '../demoData';
 
-const initialTabs: Tab[] = [{ name: '\u09B8\u0CD7\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE', path: 'welcome', isDirty: false }];
+const initialTabs: Tab[] = [{ name: '\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE', path: 'welcome', isDirty: false }];
 
 interface ClipboardData {
   type: 'copy' | 'cut';
@@ -74,14 +74,14 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const { setPublishModalOpen } = useModal();
 
   const [files, setFiles] = useState<FileSystemItem[]>(initialFiles);
-  const [projectName, setProjectName] = useState<string>('\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA');
+  const [projectName, setProjectName] = useState<string>('\u0986\u09AE\u09BE\u09B0_\u09AA\u09CD\u09B0\u0995\u09B2\u09CD\u09AA');
   const [openTabs, setOpenTabs] = useState<Tab[]>(initialTabs);
   const [activeFile, setActiveFile] = useState<string | null>('welcome');
   const [terminalLines, setTerminalLines] = useState<TerminalLine[]>([
     { text: navigator.userAgent.includes('Win') ? 'Microsoft Windows [Version 10.0.22631.3447]' : navigator.userAgent.includes('Mac') ? 'macOS [zsh]' : 'Linux [bash]', type: 'system' },
     { text: navigator.userAgent.includes('Win') ? '(c) Microsoft Corporation. All rights reserved.' : '', type: 'system' },
     { text: '', type: 'system' },
-    { text: navigator.userAgent.includes('Win') ? 'C:\\\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA> ' : '~/\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA$ ', type: 'system' },
+    { text: navigator.userAgent.includes('Win') ? 'C:\\\u0986\u09AE\u09BE\u09B0_\u09AA\u09CD\u09B0\u0995\u09B2\u09CD\u09AA> ' : '~/\u0986\u09AE\u09BE\u09B0_\u09AA\u09CD\u09B0\u0995\u09B2\u09CD\u09AA$ ', type: 'system' },
   ]);
   const [clipboard, setClipboard] = useState<ClipboardData | null>(null);
   const [undoHistory, setUndoHistory] = useState<UndoStack>({});
@@ -165,7 +165,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
     setOpenTabs(prev =>
       prev.map(tab =>
         tab.path === 'welcome'
-          ? { ...tab, name: language === 'bn' ? '\u09B8\u0CD7\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE' : 'Welcome' }
+          ? { ...tab, name: language === 'bn' ? '\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE' : 'Welcome' }
           : tab
       )
     );
@@ -179,7 +179,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
           setFiles(result);
         } else {
           setFiles(result.tree);
-          const folderName = result.path.split(/[/\\]/).pop() || '\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA';
+          const folderName = result.path.split(/[/\\]/).pop() || '\u0986\u09AE\u09BE\u09B0_\u09AA\u09CD\u09B0\u0995\u09B2\u09CD\u09AA';
           setProjectName(folderName);
         }
       } catch (err) {
@@ -232,7 +232,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
       setOpenTabs(prev => {
         const exists = prev.some(t => t.path === 'welcome');
         if (!exists) {
-          return [...prev, { name: language === 'bn' ? '\u09B8\u0CD7\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE' : 'Welcome', path: 'welcome', isDirty: false }];
+          return [...prev, { name: language === 'bn' ? '\u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE' : 'Welcome', path: 'welcome', isDirty: false }];
         }
         return prev;
       });
@@ -370,7 +370,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
         const result = await window.electronAPI.selectFolder();
         if (result) {
           setFiles(result.tree);
-          const folderName = result.path.split(/[/\\]/).pop() || '\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA';
+          const folderName = result.path.split(/[/\\]/).pop() || '\u0986\u09AE\u09BE\u09B0_\u09AA\u09CD\u09B0\u0995\u09B2\u09CD\u09AA';
           setProjectName(folderName);
           setOpenTabs([]);
           setTerminalLines([]);
@@ -615,7 +615,7 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
 
     setTerminalLines(prev => [
       ...prev,
-      { text: `C:\\\u0986\u09AE\u09BE\u09B0_\u09AA\u0CD7\u09B0\u0995\u09B2\u09CD\u09AA> run ${fileName}`, type: 'input' },
+      { text: `C:\\\u0986\u09AE\u09BE\u09B0_\u09AA\u09CD\u09B0\u0995\u09B2\u09CD\u09AA> run ${fileName}`, type: 'input' },
       { text: `[Run Mode]: Executing ${fileName}...${settings.sandboxEnabled ? ' (sandboxed)' : ''}`, type: 'system' },
     ]);
 

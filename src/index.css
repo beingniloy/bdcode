@@ -46,6 +46,9 @@
   --activity-bar-bg: #071f15;
   --activity-bar-active: #004d39;
   --activity-bar-text: #6ee7b7;
+  --gov-green: #00a87f;
+  --gov-green-dark: #006A4E;
+  --gov-green-light: #34d399;
 }
 
 /* Base resets */

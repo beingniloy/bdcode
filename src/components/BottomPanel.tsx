@@ -9,6 +9,14 @@ import XTerminal from './XTerminal';
 import { useContextMenu } from '../hooks/useContextMenu';
 import ContextMenu from './ContextMenu';
 
+interface ProblemItem {
+  file: string;
+  path: string;
+  line: number;
+  message: string;
+  severity: 'error' | 'warning' | 'info';
+}
+
 export default React.memo(function BottomPanel() {
   const { setBottomPanelOpen } = useLayout();
   const onClose = useCallback(() => setBottomPanelOpen(false), [setBottomPanelOpen]);
@@ -32,30 +40,50 @@ export default React.memo(function BottomPanel() {
 
   const { menu, menuRef, showMenu, hideMenu } = useContextMenu();
 
+  // Performance Cache: Map each immutable FileSystemItem reference to its static analysis problem details
+  // Avoids re-scanning unmodified files, dramatically improving responsiveness.
+  const problemsCache = useMemo(() => new WeakMap<FileSystemItem, ProblemItem[]>(), []);
+
   // Static analysis scanner
   const problems = useMemo(() => {
-    const list: Array<{ file: string; path: string; line: number; message: string; severity: 'error' | 'warning' | 'info' }> = [];
+    const list: ProblemItem[] = [];
     const scan = (items: FileSystemItem[]) => {
       for (const item of items) {
-        if (item.isFolder && item.children) { scan(item.children); continue; }
-        if (!item.isFolder && item.content) {
-          item.content.split('\n').forEach((lineText, idx) => {
-            if (lineText.includes('TODO')) {
-              list.push({ file: item.name, path: item.path, line: idx + 1, message: lineText.substring(lineText.indexOf('TODO')).replace(/^TODO:?\s*/, '') || 'TODO item', severity: 'info' });
-            }
-            if (/\{\s*\}/.test(lineText) && !lineText.includes('=>') && !lineText.includes('const')) {
-              list.push({ file: item.name, path: item.path, line: idx + 1, message: 'Empty block detected', severity: 'warning' });
-            }
-            if (lineText.includes('console.log')) {
-              list.push({ file: item.name, path: item.path, line: idx + 1, message: 'Remove console.log before production', severity: 'warning' });
-            }
-          });
+        if (item.isFolder && item.children) {
+          scan(item.children);
+          continue;
+        }
+        if (!item.isFolder) {
+          // Check WeakMap cache first
+          const cached = problemsCache.get(item);
+          if (cached) {
+            list.push(...cached);
+            continue;
+          }
+
+          const fileProblems: ProblemItem[] = [];
+          if (item.content) {
+            item.content.split('\n').forEach((lineText, idx) => {
+              if (lineText.includes('TODO')) {
+                fileProblems.push({ file: item.name, path: item.path, line: idx + 1, message: lineText.substring(lineText.indexOf('TODO')).replace(/^TODO:?\s*/, '') || 'TODO item', severity: 'info' });
+              }
+              if (/\{\s*\}/.test(lineText) && !lineText.includes('=>') && !lineText.includes('const')) {
+                fileProblems.push({ file: item.name, path: item.path, line: idx + 1, message: 'Empty block detected', severity: 'warning' });
+              }
+              if (lineText.includes('console.log')) {
+                fileProblems.push({ file: item.name, path: item.path, line: idx + 1, message: 'Remove console.log before production', severity: 'warning' });
+              }
+            });
+          }
+
+          problemsCache.set(item, fileProblems);
+          list.push(...fileProblems);
         }
       }
     };
     scan(files);
     return list;
-  }, [files]);
+  }, [files, problemsCache]);
 
   useEffect(() => {
     if (window.electronAPI) {

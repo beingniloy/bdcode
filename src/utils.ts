@@ -121,7 +121,16 @@ export function getFilePaths(items: FileSystemItem[], currentDir = ''): string[]
 }
 
 export function getFileIconColor(fileName: string): string {
-  const ext = fileName.split('.').pop()?.toLowerCase();
+  if (!fileName) return 'var(--text-secondary)';
+
+  const trimmed = fileName.trim();
+  const lastDotIndex = trimmed.lastIndexOf('.');
+
+  if (lastDotIndex <= 0 || lastDotIndex === trimmed.length - 1) {
+    return 'var(--text-secondary)';
+  }
+
+  const ext = trimmed.slice(lastDotIndex + 1).toLowerCase();
   switch (ext) {
     case 'html': return '#e34f26';
     case 'css': return '#0284c7';

@@ -192,6 +192,19 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--accent-color);
 }
 
+/* High-visibility focus indicators for keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 /* ── VS Code-style resize handles ─────────────────────────────── */
 
 /* Vertical resize handle (left sidebar & right sidebar) */

@@ -21,7 +21,7 @@ export default React.memo(function EditorArea() {
   const [editorTheme, setEditorTheme] = useState('vs-light');
   const [recentlyClosedTabs, setRecentlyClosedTabs] = useState<string[]>([]);
   const { menu, menuRef, showMenu, hideMenu } = useContextMenu();
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
 
   useEffect(() => {
     setEditorTheme(theme === 'light' ? 'light' : 'vs-dark');
@@ -43,9 +43,9 @@ export default React.memo(function EditorArea() {
 
   const activeItem = activeFile && activeFile !== 'welcome' ? findFileInTree(files, activeFile) : null;
 
-  const handleEditorDidMount: OnMount = useCallback((editor: any) => {
+  const handleEditorDidMount: OnMount = useCallback((editor: Parameters<OnMount>[0]) => {
     editorRef.current = editor;
-    editor.onDidChangeCursorPosition((e: any) => {
+    editor.onDidChangeCursorPosition((e) => {
       setCursorLine(e.position.lineNumber);
       setCursorCol(e.position.column);
     });

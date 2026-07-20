@@ -7,6 +7,7 @@ import { showAlert, showConfirm } from '../../hooks/useDialog';
 import { useTranslation } from '../../hooks/useTranslation';
 import { overlayStyle, modalStyle, closeBtnStyle, secondaryBtnStyle, sidebarBtnStyle } from './shared';
 import { SETTINGS_DEF, DEFAULT_SETTINGS } from '../../settingsDef';
+import { EditorSettings } from '../../types';
 
 type SettingsSection = 'editor' | 'workbench' | 'security' | 'terminal' | 'cloud' | 'about';
 
@@ -85,7 +86,7 @@ export function SettingsModal({ onClose }: { onClose?: () => void }) {
     return matchesSection && matchesSearch;
   });
 
-  const handleValueChange = (id: string, val: any) => setFormData(prev => ({ ...prev, [id]: val }));
+  const handleValueChange = (id: keyof EditorSettings, val: string | number | boolean) => setFormData(prev => ({ ...prev, [id]: val }));
 
   const handleJsonEditorChange = (value: string | undefined) => {
     if (!value) return;

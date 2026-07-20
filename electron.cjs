@@ -150,7 +150,8 @@ app.on('activate', function () {
 function getShellPath() {
   const platform = os.platform();
   if (platform === 'win32') {
-    return 'powershell.exe';
+    const systemRoot = process.env.SystemRoot || 'C:\\Windows';
+    return path.join(systemRoot, 'System32\\WindowsPowerShell\\v1.0\\powershell.exe');
   } else if (platform === 'darwin') {
     return process.env.SHELL || '/bin/zsh';
   } else {
@@ -678,6 +679,38 @@ function isSafeShell(shellPath) {
   return ALLOWED_SHELLS.includes(normalized);
 }
 
+function getAbsoluteSafeShellPath(shellPath) {
+  if (typeof shellPath !== 'string') return getShellPath();
+  const normalized = shellPath.trim().replace(/\\/g, '/').toLowerCase();
+  const platform = os.platform();
+  const systemRoot = process.env.SystemRoot || 'C:\\Windows';
+
+  if (platform === 'win32') {
+    if (normalized.includes('powershell')) {
+      return path.join(systemRoot, 'System32\\WindowsPowerShell\\v1.0\\powershell.exe');
+    }
+    if (normalized.includes('cmd')) {
+      return path.join(systemRoot, 'System32\\cmd.exe');
+    }
+    if (normalized.includes('pwsh')) {
+      const p7 = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'PowerShell\\7\\pwsh.exe');
+      if (fs.existsSync(p7)) return p7;
+      return path.join(systemRoot, 'System32\\WindowsPowerShell\\v1.0\\powershell.exe');
+    }
+  } else {
+    if (normalized.endsWith('bash')) {
+      return fs.existsSync('/bin/bash') ? '/bin/bash' : '/usr/bin/bash';
+    }
+    if (normalized.endsWith('zsh')) {
+      return fs.existsSync('/bin/zsh') ? '/bin/zsh' : '/usr/bin/zsh';
+    }
+    if (normalized.endsWith('sh')) {
+      return fs.existsSync('/bin/sh') ? '/bin/sh' : '/usr/bin/sh';
+    }
+  }
+  return getShellPath();
+}
+
 ipcMain.handle('restart-shell', (event, shellPath) => {
   if (shellPath) {
     // Secure validation to prevent process execution of arbitrary binaries (Command/Process Injection vulnerability)
@@ -685,10 +718,12 @@ ipcMain.handle('restart-shell', (event, shellPath) => {
       console.warn(`Blocked unsafe shell override attempt: "${shellPath}"`);
       return false;
     }
+    // Convert to a secure absolute path to prevent CWD binary-hijacking or path-traversal bypasses
+    const secureShellPath = getAbsoluteSafeShellPath(shellPath);
     // Override the shell for this restart
     const savedShell = workspaceRoot;
     workspaceRoot = savedShell;
-    startNewShellWith(shellPath);
+    startNewShellWith(secureShellPath);
   } else {
     startNewShell();
   }

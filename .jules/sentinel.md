@@ -1,3 +1,8 @@
+## 2026-07-17 - [CWD Binary Hijacking Mitigation for Electron Shell Process Spawning]
+**Vulnerability:** Spawning a shell with relative binary names (e.g. `powershell.exe` or `cmd.exe`) on Windows or POSIX can lead to CWD Binary Hijacking if a workspace has a malicious executable with the same name.
+**Learning:** Simply whitelisting simple shell names is not sufficient if the underlying process-spawning call resolves relative paths relative to the current working directory (`workspaceRoot`). Electron main processes must always resolve shell binaries to secure, absolute paths (e.g. in `System32` or `/bin`) before execution.
+**Prevention:** Always map whitelisted shell names to absolute, safe system paths (e.g. `path.join(process.env.SystemRoot || 'C:\\Windows', 'System32\\cmd.exe')`) and spawn using those absolute paths only.
+
 ## 2026-07-17 - [IPC Command and Process Injection Prevention in Electron]
 **Vulnerability:** Unsanitized parameters exposed via IPC handlers in Electron allowed the renderer process to trigger arbitrary process execution (`restart-shell` with arbitrary executable path) and git command/argument injection (`git-cmd` with custom arguments like `--ext-diff`).
 **Learning:** Even if context isolation is enabled and the renderer does not expose the raw `child_process` module, exposed high-level IPC handlers (like Git commands or custom shell selection handlers) can still be abused as a bridge for command/argument injection if they do not strictly sanitize or validate their inputs on the main process side.

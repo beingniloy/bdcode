@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react';
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 import type { OnMount } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 import { X, FileCode, Home, FilePlus, FolderPlus, FolderOpen, Copy, Scissors, Clipboard, Save, SaveAll, RefreshCw, Settings, Undo, Redo, Search, Braces, BookOpen, FileDown, CopyPlus } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
 import { useFileSystem } from '../contexts/FileSystemContext';
@@ -21,7 +22,7 @@ export default React.memo(function EditorArea() {
   const [editorTheme, setEditorTheme] = useState('vs-light');
   const [recentlyClosedTabs, setRecentlyClosedTabs] = useState<string[]>([]);
   const { menu, menuRef, showMenu, hideMenu } = useContextMenu();
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
     setEditorTheme(theme === 'light' ? 'light' : 'vs-dark');
@@ -43,9 +44,9 @@ export default React.memo(function EditorArea() {
 
   const activeItem = activeFile && activeFile !== 'welcome' ? findFileInTree(files, activeFile) : null;
 
-  const handleEditorDidMount: OnMount = useCallback((editor: any) => {
+  const handleEditorDidMount: OnMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
-    editor.onDidChangeCursorPosition((e: any) => {
+    editor.onDidChangeCursorPosition((e) => {
       setCursorLine(e.position.lineNumber);
       setCursorCol(e.position.column);
     });

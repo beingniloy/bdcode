@@ -119,8 +119,9 @@ export default React.memo(function BottomPanel() {
       }
       const output = result === undefined ? 'undefined' : result === null ? 'null' : typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result);
       setDebugLines([...newLines, { text: output, type: 'output' as const }]);
-    } catch (err: any) {
-      setDebugLines([...newLines, { text: err.message, type: 'error' as const }]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setDebugLines([...newLines, { text: message, type: 'error' as const }]);
     }
     setDebugInput('');
   };

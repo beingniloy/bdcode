@@ -365,9 +365,23 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const handleSaveAll = useCallback(async () => {
     if (window.electronAPI) {
       try {
+        // Build a Map of files for O(1) lookups
+        const fileMap = new Map<string, FileSystemItem>();
+        const buildMap = (items: FileSystemItem[]) => {
+          for (const item of items) {
+            if (!item.isFolder) {
+              fileMap.set(item.path, item);
+            }
+            if (item.children) {
+              buildMap(item.children);
+            }
+          }
+        };
+        buildMap(files);
+
         for (const tab of openTabs) {
           if (tab.isDirty && tab.path !== 'welcome' && !tab.path.startsWith('docs/')) {
-            const fileNode = findFileInTree(files, tab.path);
+            const fileNode = fileMap.get(tab.path);
             if (fileNode) {
               await window.electronAPI.writeFile(tab.path, fileNode.content || '');
             }

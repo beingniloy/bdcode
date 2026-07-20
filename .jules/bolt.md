@@ -1,3 +1,7 @@
 ## 2026-07-17 - [Static Analysis Scan Cache]
 **Learning:** Workspace static analysis recursively crawls all project files, performing regex and string scanning for warnings (e.g. empty blocks, `console.log`, TODO/FIXME). When typing, React's state is updated and the entire file tree is re-scanned repeatedly on every keystroke, which causes significant performance lag and blocking UI in large workspaces.
 **Action:** Use a `WeakMap` to cache computed static analysis results per-item based on the immutable `FileSystemItem` object references. When React does an immutable update, unchanged files retain their reference and bypass re-scanning by using the cache, while only modified files (with new references) are re-evaluated. Old references are automatically garbage collected.
+
+## 2026-07-20 - [O(1) Map Lookups in Save All Operation]
+**Learning:** When performing a "Save All" operation on multiple dirty tabs, performing a recursive tree-search look-up (like `findFileInTree`) for each tab within a loop leads to an $O(N \times M)$ runtime complexity, where $N$ is the number of files in the file tree and $M$ is the number of tabs being saved. This can cause visible blocking lags in workspace interaction when handling large repositories or saving numerous tabs at once.
+**Action:** Before looping over the tabs, traverse the file tree once to build a flat `Map` keyed by file path in $O(N)$ time. Look up file nodes inside the loop using the `Map` in $O(1)$ time, reducing the overall complexity of the lookups in the loop to $O(N + M)$.

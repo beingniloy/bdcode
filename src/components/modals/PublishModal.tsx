@@ -94,12 +94,13 @@ export function PublishModal({ onClose }: { onClose?: () => void }) {
 
   const totalSize = useMemo(() => {
     let bytes = 0;
+    const encoder = new TextEncoder();
     const walk = (items: FileSystemItem[]) => {
       for (const item of items) {
         if (item.isFolder && item.children) {
           walk(item.children);
         } else if (!item.isFolder && includedPaths.has(item.path) && item.content) {
-          bytes += new Blob([item.content]).size;
+          bytes += encoder.encode(item.content).length;
         }
       }
     };

@@ -1,7 +1,18 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { updateFileContentInTree } from './utils';
+import { updateFileContentInTree, eventToShortcut } from './utils';
 import { FileSystemItem } from './types';
+
+function mockKeyEvent(overrides: Partial<KeyboardEvent>): KeyboardEvent {
+  return {
+    key: '',
+    ctrlKey: false,
+    metaKey: false,
+    shiftKey: false,
+    altKey: false,
+    ...overrides,
+  } as KeyboardEvent;
+}
 
 describe('updateFileContentInTree', () => {
   it('should update content and modified state of a file at the root level', () => {
@@ -108,5 +119,71 @@ describe('updateFileContentInTree', () => {
 
     const result = updateFileContentInTree(items, 'folder/file.js', 'content', true);
     assert.deepEqual(result, items);
+  });
+});
+
+describe('eventToShortcut', () => {
+  it('should return empty string for modifier-only key presses', () => {
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Control', ctrlKey: true })), '');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Shift', shiftKey: true })), '');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Alt', altKey: true })), '');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Meta', metaKey: true })), '');
+  });
+
+  it('should format single keys without modifiers and capitalize single character keys', () => {
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 's' })), 'S');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'A' })), 'A');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: '1' })), '1');
+  });
+
+  it('should format single modifier combinations correctly', () => {
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 's', ctrlKey: true })), 'Ctrl+S');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 's', metaKey: true })), 'Ctrl+S');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'a', shiftKey: true })), 'Shift+A');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'b', altKey: true })), 'Alt+B');
+  });
+
+  it('should format multiple modifier combinations in Ctrl+Shift+Alt order', () => {
+    assert.equal(
+      eventToShortcut(mockKeyEvent({ key: 's', ctrlKey: true, shiftKey: true })),
+      'Ctrl+Shift+S'
+    );
+    assert.equal(
+      eventToShortcut(mockKeyEvent({ key: 'z', ctrlKey: true, altKey: true })),
+      'Ctrl+Alt+Z'
+    );
+    assert.equal(
+      eventToShortcut(mockKeyEvent({ key: 'p', metaKey: true, shiftKey: true, altKey: true })),
+      'Ctrl+Shift+Alt+P'
+    );
+  });
+
+  it('should map special keys using KEY_SHORTCUT_MAP', () => {
+    assert.equal(eventToShortcut(mockKeyEvent({ key: ' ' })), 'Space');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Escape' })), 'Esc');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'ArrowUp' })), 'Up');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'ArrowDown' })), 'Down');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'ArrowLeft' })), 'Left');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'ArrowRight' })), 'Right');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: '/' })), '/');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: '-' })), '-');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: '=' })), '=');
+
+    assert.equal(eventToShortcut(mockKeyEvent({ key: ' ', ctrlKey: true })), 'Ctrl+Space');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Escape', shiftKey: true })), 'Shift+Esc');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'ArrowUp', ctrlKey: true })), 'Ctrl+Up');
+  });
+
+  it('should handle unmapped multi-character keys without modifying their case', () => {
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Enter' })), 'Enter');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Tab' })), 'Tab');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Backspace' })), 'Backspace');
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'F12' })), 'F12');
+
+    assert.equal(eventToShortcut(mockKeyEvent({ key: 'Enter', ctrlKey: true })), 'Ctrl+Enter');
+    assert.equal(
+      eventToShortcut(mockKeyEvent({ key: 'F1', ctrlKey: true, shiftKey: true })),
+      'Ctrl+Shift+F1'
+    );
   });
 });

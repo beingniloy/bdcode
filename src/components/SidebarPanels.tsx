@@ -419,52 +419,34 @@ export default React.memo(function SidebarPanels() {
           <div>
             <h4 style={subHeaderStyle}>{t('installed')} ({installedExtensions.length})</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-              {installedExtensions.map((ext) => {
-                const ExtLogo = ext.logo;
-                return (
-                  <div key={ext.id} style={extCardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={extLogoStyle}><ExtLogo size={16} color="var(--gov-green)" /></div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{ext.name}</span>
-                        <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ext.desc}</span>
-                      </div>
-                    </div>
-                    <div style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success-color)', fontSize: '10px', fontWeight: 'bold', marginTop: '6px' }}>
-                      <Check size={12} /><span>Active</span>
-                    </div>
-                  </div>
-                );
-              })}
+              {installedExtensions.map((ext) => (
+                <ExtensionCard
+                  key={ext.id}
+                  name={ext.name}
+                  desc={ext.desc}
+                  logo={ext.logo}
+                  logoColor="var(--gov-green)"
+                  isActive
+                />
+              ))}
             </div>
           </div>
           <div>
             <h4 style={subHeaderStyle}>{t('recommended')}</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-              {availableExtensions.map((ext) => {
-                const ExtLogo = ext.logo;
-                return (
-                  <div key={ext.id} style={extCardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={extLogoStyle}><ExtLogo size={16} color="var(--text-secondary)" /></div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{ext.name}</span>
-                        <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ext.desc}</span>
-                      </div>
-                    </div>
-                    {!ext.installed && (
-                      <button onClick={() => handleInstallExt(ext.id)} disabled={ext.installing} style={{ alignSelf: 'flex-end', background: 'var(--gov-green)', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        {ext.installing ? <><Loader2 size={11} className="animate-spin" /><span>{t('installing')}</span></> : <><Download size={11} /><span>{t('install')}</span></>}
-                      </button>
-                    )}
-                    {ext.installed && (
-                      <div style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success-color)', fontSize: '10px', fontWeight: 'bold', marginTop: '6px' }}>
-                        <Check size={12} /><span>Installed</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {availableExtensions.map((ext) => (
+                <ExtensionCard
+                  key={ext.id}
+                  name={ext.name}
+                  desc={ext.desc}
+                  logo={ext.logo}
+                  isInstalled={ext.installed}
+                  isInstalling={ext.installing}
+                  onInstall={() => handleInstallExt(ext.id)}
+                  installLabel={t('install')}
+                  installingLabel={t('installing')}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -544,6 +526,59 @@ export default React.memo(function SidebarPanels() {
     </div>
   );
 });
+
+interface ExtensionCardProps {
+  name: string;
+  desc: string;
+  logo: React.ElementType;
+  logoColor?: string;
+  isActive?: boolean;
+  isInstalled?: boolean;
+  isInstalling?: boolean;
+  onInstall?: () => void;
+  installLabel?: string;
+  installingLabel?: string;
+}
+
+const ExtensionCard: React.FC<ExtensionCardProps> = ({
+  name,
+  desc,
+  logo: Logo,
+  logoColor = 'var(--text-secondary)',
+  isActive = false,
+  isInstalled = false,
+  isInstalling = false,
+  onInstall,
+  installLabel = 'Install',
+  installingLabel = 'Installing...'
+}) => {
+  return (
+    <div style={extCardStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={extLogoStyle}><Logo size={16} color={logoColor} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{name}</span>
+          <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{desc}</span>
+        </div>
+      </div>
+      {isActive && (
+        <div style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success-color)', fontSize: '10px', fontWeight: 'bold', marginTop: '6px' }}>
+          <Check size={12} /><span>Active</span>
+        </div>
+      )}
+      {!isActive && !isInstalled && onInstall && (
+        <button onClick={onInstall} disabled={isInstalling} style={{ alignSelf: 'flex-end', background: 'var(--gov-green)', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {isInstalling ? <><Loader2 size={11} className="animate-spin" /><span>{installingLabel}</span></> : <><Download size={11} /><span>{installLabel}</span></>}
+        </button>
+      )}
+      {!isActive && isInstalled && (
+        <div style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success-color)', fontSize: '10px', fontWeight: 'bold', marginTop: '6px' }}>
+          <Check size={12} /><span>Installed</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ── Shared styles ──
 const headerStyle: React.CSSProperties = { fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '4px' };

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
-import { FileSystemItem, Tab, TerminalLine } from '../types';
+import { FileSystemItem, ProblemItem, Tab, TerminalLine } from '../types';
 import { showConfirm, showPrompt } from '../hooks/useDialog';
 import { useSettings } from './SettingsContext';
 import { useModal } from './ModalContext';
@@ -10,6 +10,7 @@ import {
   deleteItemFromTree,
   renameItemInTree,
   updateChildPaths,
+  analyzeWorkspaceProblems,
 } from '../utils';
 import initialFiles from '../demoData';
 
@@ -86,9 +87,9 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const [clipboard, setClipboard] = useState<ClipboardData | null>(null);
   const [undoHistory, setUndoHistory] = useState<UndoStack>({});
 
-  // Performance Cache: Map each immutable FileSystemItem reference to its static analysis problem count
+  // Performance Cache: Map each immutable FileSystemItem reference to its static analysis problems
   // Avoids re-computing empty block, console.log, TODO, and FIXME warnings on unmodified files
-  const problemsCountCache = useMemo(() => new WeakMap<FileSystemItem, { errors: number; warnings: number }>(), []);
+  const problemsCache = useMemo(() => new WeakMap<FileSystemItem, ProblemItem[]>(), []);
 
   const pushHistory = useCallback((path: string, oldContent: string) => {
     if (!path || path === 'welcome' || path.startsWith('docs/')) return;
@@ -199,52 +200,8 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   }, [loadWorkspace]);
 
   const problemsCount = useMemo(() => {
-    let errors = 0;
-    let warnings = 0;
-
-    const scan = (items: FileSystemItem[]) => {
-      for (const item of items) {
-        if (item.isFolder && item.children) {
-          scan(item.children);
-        } else if (!item.isFolder) {
-          // Check WeakMap cache first
-          const cached = problemsCountCache.get(item);
-          if (cached) {
-            errors += cached.errors;
-            warnings += cached.warnings;
-            continue;
-          }
-
-          let fileErrors = 0;
-          let fileWarnings = 0;
-          if (item.content) {
-            const lines = item.content.split('\n');
-            for (const lineText of lines) {
-              if (/\{\s*\}/.test(lineText) && !lineText.includes('=>') && !lineText.includes('const')) {
-                fileWarnings++;
-              }
-              if (lineText.includes('console.log')) {
-                fileWarnings++;
-              }
-              if (lineText.includes('TODO')) {
-                fileWarnings++;
-              }
-              if (lineText.includes('FIXME')) {
-                fileWarnings++;
-              }
-            }
-          }
-
-          problemsCountCache.set(item, { errors: fileErrors, warnings: fileWarnings });
-          errors += fileErrors;
-          warnings += fileWarnings;
-        }
-      }
-    };
-
-    scan(files);
-    return { errors, warnings };
-  }, [files, problemsCountCache]);
+    return analyzeWorkspaceProblems(files, problemsCache).counts;
+  }, [files, problemsCache]);
 
   const handleFileSelect = useCallback(async (path: string) => {
     if (path === 'welcome') {

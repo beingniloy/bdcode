@@ -1,21 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Trash2, X, AlertTriangle, Info, XCircle, Copy, Clipboard, Maximize2, Minimize2 } from 'lucide-react';
-import { FileSystemItem } from '../types';
+import { FileSystemItem, ProblemItem } from '../types';
 import { useLayout } from '../contexts/LayoutContext';
 import { useFileSystem } from '../contexts/FileSystemContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useTranslation } from '../hooks/useTranslation';
+import { analyzeWorkspaceProblems } from '../utils';
 import XTerminal from './XTerminal';
 import { useContextMenu } from '../hooks/useContextMenu';
 import ContextMenu from './ContextMenu';
-
-interface ProblemItem {
-  file: string;
-  path: string;
-  line: number;
-  message: string;
-  severity: 'error' | 'warning' | 'info';
-}
 
 export default React.memo(function BottomPanel() {
   const { setBottomPanelOpen } = useLayout();
@@ -46,43 +39,7 @@ export default React.memo(function BottomPanel() {
 
   // Static analysis scanner
   const problems = useMemo(() => {
-    const list: ProblemItem[] = [];
-    const scan = (items: FileSystemItem[]) => {
-      for (const item of items) {
-        if (item.isFolder && item.children) {
-          scan(item.children);
-          continue;
-        }
-        if (!item.isFolder) {
-          // Check WeakMap cache first
-          const cached = problemsCache.get(item);
-          if (cached) {
-            list.push(...cached);
-            continue;
-          }
-
-          const fileProblems: ProblemItem[] = [];
-          if (item.content) {
-            item.content.split('\n').forEach((lineText, idx) => {
-              if (lineText.includes('TODO')) {
-                fileProblems.push({ file: item.name, path: item.path, line: idx + 1, message: lineText.substring(lineText.indexOf('TODO')).replace(/^TODO:?\s*/, '') || 'TODO item', severity: 'info' });
-              }
-              if (/\{\s*\}/.test(lineText) && !lineText.includes('=>') && !lineText.includes('const')) {
-                fileProblems.push({ file: item.name, path: item.path, line: idx + 1, message: 'Empty block detected', severity: 'warning' });
-              }
-              if (lineText.includes('console.log')) {
-                fileProblems.push({ file: item.name, path: item.path, line: idx + 1, message: 'Remove console.log before production', severity: 'warning' });
-              }
-            });
-          }
-
-          problemsCache.set(item, fileProblems);
-          list.push(...fileProblems);
-        }
-      }
-    };
-    scan(files);
-    return list;
+    return analyzeWorkspaceProblems(files, problemsCache).problems;
   }, [files, problemsCache]);
 
   useEffect(() => {

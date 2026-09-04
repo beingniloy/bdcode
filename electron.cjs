@@ -353,11 +353,28 @@ function isIgnored(name) {
   return ignored.includes(name);
 }
 
+function getRealPath(targetPath) {
+  try {
+    return fs.realpathSync(targetPath);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      const parent = path.dirname(targetPath);
+      if (parent === targetPath) {
+        return targetPath;
+      }
+      const realParent = getRealPath(parent);
+      return path.join(realParent, path.basename(targetPath));
+    }
+    throw err;
+  }
+}
+
 function safePath(relPath) {
   const fullPath = path.isAbsolute(relPath) ? relPath : path.join(workspaceRoot, relPath);
-  const resolved = path.resolve(fullPath);
-  const rootResolved = path.resolve(workspaceRoot);
-  if (!resolved.startsWith(rootResolved + path.sep) && resolved !== rootResolved) {
+  const resolved = getRealPath(fullPath);
+  const rootResolved = getRealPath(workspaceRoot);
+  const rootWithSep = rootResolved.endsWith(path.sep) ? rootResolved : rootResolved + path.sep;
+  if (!resolved.startsWith(rootWithSep) && resolved !== rootResolved) {
     throw new Error('Path traversal detected');
   }
   return resolved;

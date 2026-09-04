@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { updateFileContentInTree } from './utils';
+import { getFilePaths, updateFileContentInTree } from './utils';
 import { FileSystemItem } from './types';
 
 describe('updateFileContentInTree', () => {
@@ -108,5 +108,75 @@ describe('updateFileContentInTree', () => {
 
     const result = updateFileContentInTree(items, 'folder/file.js', 'content', true);
     assert.deepEqual(result, items);
+  });
+});
+
+describe('getFilePaths', () => {
+  it('should return an empty array when given an empty items array', () => {
+    const result = getFilePaths([]);
+    assert.deepEqual(result, []);
+  });
+
+  it('should return file paths for flat files at the root level', () => {
+    const items: FileSystemItem[] = [
+      { name: 'index.html', path: 'index.html', isFolder: false },
+      { name: 'style.css', path: 'style.css', isFolder: false },
+    ];
+
+    const result = getFilePaths(items);
+    assert.deepEqual(result, ['index.html', 'style.css']);
+  });
+
+  it('should return file paths recursively for nested folders', () => {
+    const items: FileSystemItem[] = [
+      { name: 'README.md', path: 'README.md', isFolder: false },
+      {
+        name: 'src',
+        path: 'src',
+        isFolder: true,
+        children: [
+          { name: 'App.tsx', path: 'src/App.tsx', isFolder: false },
+          {
+            name: 'components',
+            path: 'src/components',
+            isFolder: true,
+            children: [
+              { name: 'Header.tsx', path: 'src/components/Header.tsx', isFolder: false },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const result = getFilePaths(items);
+    assert.deepEqual(result, ['README.md', 'src/App.tsx', 'src/components/Header.tsx']);
+  });
+
+  it('should handle folders with empty or undefined children', () => {
+    const items: FileSystemItem[] = [
+      { name: 'emptyFolder', path: 'emptyFolder', isFolder: true, children: [] },
+      { name: 'undefinedChildrenFolder', path: 'undefinedChildrenFolder', isFolder: true, children: undefined },
+      { name: 'file.js', path: 'file.js', isFolder: false },
+    ];
+
+    const result = getFilePaths(items);
+    assert.deepEqual(result, ['file.js']);
+  });
+
+  it('should prepend currentDir prefix when provided', () => {
+    const items: FileSystemItem[] = [
+      { name: 'main.ts', path: 'main.ts', isFolder: false },
+      {
+        name: 'utils',
+        path: 'utils',
+        isFolder: true,
+        children: [
+          { name: 'helper.ts', path: 'utils/helper.ts', isFolder: false },
+        ],
+      },
+    ];
+
+    const result = getFilePaths(items, 'root/');
+    assert.deepEqual(result, ['root/main.ts', 'root/utils/helper.ts']);
   });
 });

@@ -11,6 +11,7 @@ import { useFileSystem } from '../contexts/FileSystemContext';
 import { useModal } from '../contexts/ModalContext';
 import { showAlert } from '../hooks/useDialog';
 import { useTranslation } from '../hooks/useTranslation';
+import { buildSearchRegex, searchFilesRecursively } from '../utils';
 
 export default React.memo(function SidebarPanels() {
   const { language, settings, setSettings, theme, setTheme } = useSettings();
@@ -31,37 +32,6 @@ export default React.memo(function SidebarPanels() {
   const [expandedFiles, setExpandedFiles] = useState<Record<string, boolean>>({});
   const [replaceMode, setReplaceMode] = useState(false);
 
-  const buildSearchRegex = (query: string): RegExp | null => {
-    if (!query) return null;
-    try {
-      let pattern = useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      if (wholeWord) pattern = `\\b${pattern}\\b`;
-      const flags = caseSensitive ? 'g' : 'gi';
-      return new RegExp(pattern, flags);
-    } catch {
-      return null;
-    }
-  };
-
-  const searchFilesRecursively = (items: FileSystemItem[], regex: RegExp): Array<{ path: string, line: number, text: string, colStart: number, colEnd: number }> => {
-    const list: Array<{ path: string, line: number, text: string, colStart: number, colEnd: number }> = [];
-    for (const item of items) {
-      if (item.isFolder && item.children) {
-        list.push(...searchFilesRecursively(item.children, regex));
-      } else if (!item.isFolder && item.content) {
-        const lines = item.content.split('\n');
-        lines.forEach((lineText, idx) => {
-          regex.lastIndex = 0;
-          const match = regex.exec(lineText);
-          if (match) {
-            list.push({ path: item.path, line: idx + 1, text: lineText.trim(), colStart: match.index, colEnd: match.index + match[0].length });
-          }
-        });
-      }
-    }
-    return list;
-  };
-
   useEffect(() => {
     if (!searchQuery) { setSearchResults([]); return; }
     const timer = setTimeout(() => {
@@ -75,7 +45,7 @@ export default React.memo(function SidebarPanels() {
           setExpandedFiles(grouped);
         } else {
           // Web mode: in-memory search
-          const regex = buildSearchRegex(searchQuery);
+          const regex = buildSearchRegex(searchQuery, { caseSensitive, wholeWord, useRegex });
           if (!regex) { setSearchResults([]); return; }
           const results = searchFilesRecursively(files, regex);
           setSearchResults(results);
@@ -128,7 +98,7 @@ export default React.memo(function SidebarPanels() {
       setSearchResults([]);
     } else {
       // Web mode: in-memory replace
-      const regex = buildSearchRegex(searchQuery);
+      const regex = buildSearchRegex(searchQuery, { caseSensitive, wholeWord, useRegex });
       if (!regex) return;
       let totalReplacements = 0;
 

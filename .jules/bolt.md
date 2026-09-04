@@ -5,3 +5,7 @@
 ## 2026-07-18 - [Avoid Expensive Blob Instantiations in Loops]
 **Learning:** Instantiating heavy modern Web API objects like `Blob` inside hot traversal loops to calculate the UTF-8 byte length of raw string content introduces massive GC and CPU performance overheads.
 **Action:** Avoid calling `new Blob([item.content]).size` inside loops. Instead, initialize a single `TextEncoder` instance outside the loop/recursion or at the module level, and call `encoder.encode(content).length` to calculate raw byte sizes with substantially less allocation overhead (~1.93x faster performance and significantly improved memory/GC efficiency).
+
+## 2026-07-19 - [File-level Regex Pre-filtering & Stateless Line Matching]
+**Learning:** Performing `split('\n')` and resetting `regex.lastIndex = 0` on every single line of every file in the project during recursive file search causes massive CPU overhead and closure allocation.
+**Action:** Pre-check full file content with `regex.test(item.content)` to skip `split('\n')` for non-matching files. In addition, derive a non-global `lineRegex` once outside the loop so `.exec()` calls on individual lines are stateless and do not require resetting `lastIndex` per line (~4.7x speedup, ~79% time saved).

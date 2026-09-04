@@ -192,3 +192,88 @@ export function isInputElement(e: KeyboardEvent): boolean {
   const tag = (e.target as HTMLElement)?.tagName;
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 }
+
+export interface SearchOptions {
+  caseSensitive?: boolean;
+  wholeWord?: boolean;
+  useRegex?: boolean;
+}
+
+export interface SearchResult {
+  path: string;
+  line: number;
+  text: string;
+  colStart: number;
+  colEnd: number;
+}
+
+export function buildSearchRegex(query: string, options: SearchOptions = {}): RegExp | null {
+  if (!query) return null;
+  try {
+    let pattern = options.useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (options.wholeWord) pattern = `\\b${pattern}\\b`;
+    const flags = options.caseSensitive ? 'g' : 'gi';
+    return new RegExp(pattern, flags);
+  } catch {
+    return null;
+  }
+}
+
+/**
+  * Optimized recursive file search across FileSystemItem tree.
+  *
+  * Performance Optimizations:
+  * 1. File-level pre-filtering: `regex.test(item.content)` is run once per file before
+  *    splitting the string into lines. If the file content does not match the regex,
+  *    `split('\n')` and per-line matching are skipped completely.
+  * 2. Non-global line regex: A non-global `lineRegex` is derived once outside the search loop.
+  *    Calling `.exec()` on a non-global RegExp is stateless and does not mutate `lastIndex`,
+  *    eliminating the overhead of resetting `regex.lastIndex = 0` on every single line.
+  * 3. Index loop: Uses a standard indexed `for` loop over lines to avoid closure allocation
+  *    per line.
+  */
+export function searchFilesRecursively(items: FileSystemItem[], regex: RegExp): SearchResult[] {
+  // Ensure multiline 'm' flag is present for full content pre-filtering so line anchors (^ and $) match line boundaries
+  const fileFlags = regex.flags.includes('m') ? regex.flags : regex.flags + 'm';
+  const fileRegex = new RegExp(regex.source, fileFlags);
+
+  // Derive non-global line regex once outside search loop so per-line matching is stateless
+  const lineRegex = regex.global ? new RegExp(regex.source, regex.flags.replace('g', '')) : regex;
+
+  return searchFilesRecursivelyInternal(items, fileRegex, lineRegex);
+}
+
+function searchFilesRecursivelyInternal(
+  items: FileSystemItem[],
+  fileRegex: RegExp,
+  lineRegex: RegExp
+): SearchResult[] {
+  const list: SearchResult[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.isFolder && item.children) {
+      list.push(...searchFilesRecursivelyInternal(item.children, fileRegex, lineRegex));
+    } else if (!item.isFolder && item.content) {
+      // Pre-filter check: reset lastIndex and test full file content first (with multiline 'm' flag)
+      fileRegex.lastIndex = 0;
+      if (!fileRegex.test(item.content)) {
+        continue;
+      }
+      const lines = item.content.split('\n');
+      for (let idx = 0; idx < lines.length; idx++) {
+        const lineText = lines[idx];
+        const match = lineRegex.exec(lineText);
+        if (match) {
+          list.push({
+            path: item.path,
+            line: idx + 1,
+            text: lineText.trim(),
+            colStart: match.index,
+            colEnd: match.index + match[0].length
+          });
+        }
+      }
+    }
+  }
+  return list;
+}

@@ -26,6 +26,9 @@ interface SettingsContextValue {
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
+const isWin = typeof navigator !== 'undefined' && navigator.userAgent.includes('Win');
+const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac');
+
 const defaultSettings: EditorSettings = {
   fontSize: 14,
   fontFamily: 'JetBrains Mono',
@@ -44,11 +47,11 @@ const defaultSettings: EditorSettings = {
   blockTelemetry: true,
   sslCheck: true,
   terminalFontSize: 12,
-  terminalShell: navigator.userAgent.includes('Win') ? 'powershell.exe' : navigator.userAgent.includes('Mac') ? 'zsh' : 'bash',
+  terminalShell: isWin ? 'powershell.exe' : isMac ? 'zsh' : 'bash',
   terminalCursorStyle: 'block',
   autoPublish: false,
   nodeEnv: 'development',
-  agencyCode: navigator.userAgent.includes('Win') ? 'GOV-BD-WIN' : navigator.userAgent.includes('Mac') ? 'GOV-BD-MAC' : 'GOV-BD-LNX'
+  agencyCode: isWin ? 'GOV-BD-WIN' : isMac ? 'GOV-BD-MAC' : 'GOV-BD-LNX'
 };
 
 // Default keybindings for all commands
@@ -80,7 +83,7 @@ const SETTINGS_STORAGE_KEY = 'bdcode-settings';
 const LANGUAGE_STORAGE_KEY = 'bdcode-language';
 
 function getSystemTheme(): Theme {
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     return 'dark';
   }
   return 'light';

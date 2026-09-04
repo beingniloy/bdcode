@@ -3,30 +3,41 @@ import { X, AlertTriangle, Info, HelpCircle } from 'lucide-react';
 import { useDialog } from '../hooks/useDialog';
 import { useSettings } from '../contexts/SettingsContext';
 
+export const dialogTranslations = {
+  bn: {
+    ok: 'ঠিক আছে',
+    cancel: 'বাতিল',
+    close: 'বন্ধ করুন',
+    info: 'তথ্য',
+    confirm: 'নিশ্চিতকরণ',
+    input: 'ইনপুট',
+  },
+  en: {
+    ok: 'OK',
+    cancel: 'Cancel',
+    close: 'Close',
+    info: 'Info',
+    confirm: 'Confirm',
+    input: 'Input',
+  }
+};
+
+export function getDialogTitle(type: 'alert' | 'confirm' | 'prompt', language: 'bn' | 'en') {
+  const titleMap = {
+    alert: dialogTranslations[language].info,
+    confirm: dialogTranslations[language].confirm,
+    prompt: dialogTranslations[language].input,
+  };
+  return titleMap[type];
+}
+
 export default function ConfirmDialog() {
   const { dialog, closeDialog } = useDialog();
   const { language } = useSettings();
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState('');
 
-  const translations = {
-    bn: {
-      ok: 'ঠিক আছে',
-      cancel: 'বাতিল',
-      close: 'বন্ধ করুন',
-      info: 'তথ্য',
-      confirm: 'নিশ্চিতকরণ',
-      input: 'ইনপুট',
-    },
-    en: {
-      ok: 'OK',
-      cancel: 'Cancel',
-      close: 'Close',
-      info: 'Info',
-      confirm: 'Confirm',
-      input: 'Input',
-    }
-  }[language];
+  const translations = dialogTranslations[language];
 
   useEffect(() => {
     if (dialog.type === 'prompt') {
@@ -76,17 +87,16 @@ export default function ConfirmDialog() {
 
   if (dialog.type === null) return null;
 
-  const getIcon = () => {
-    switch (dialog.type) {
-      case 'alert':
-        return <Info size={24} color="var(--gov-green, #006A4E)" />;
-      case 'confirm':
-        return <HelpCircle size={24} color="var(--gov-green, #006A4E)" />;
-      case 'prompt':
-        return <AlertTriangle size={24} color="var(--gov-green, #006A4E)" />;
-      default:
-        return null;
-    }
+  const titleKeyMap = {
+    alert: translations.info,
+    confirm: translations.confirm,
+    prompt: translations.input,
+  };
+
+  const iconMap = {
+    alert: <Info size={24} color="var(--gov-green, #006A4E)" />,
+    confirm: <HelpCircle size={24} color="var(--gov-green, #006A4E)" />,
+    prompt: <AlertTriangle size={24} color="var(--gov-green, #006A4E)" />,
   };
 
   return (
@@ -130,7 +140,7 @@ export default function ConfirmDialog() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {getIcon()}
+            {iconMap[dialog.type]}
             <span
               id="dialog-title"
               style={{
@@ -139,11 +149,7 @@ export default function ConfirmDialog() {
                 color: 'var(--text-primary, #111827)'
               }}
             >
-              {dialog.type === 'alert'
-                ? translations.info
-                : dialog.type === 'confirm'
-                ? translations.confirm
-                : translations.input}
+              {titleKeyMap[dialog.type]}
             </span>
           </div>
           <button

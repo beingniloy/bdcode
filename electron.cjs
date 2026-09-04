@@ -768,7 +768,7 @@ ipcMain.handle('git-status', () => {
         return { status, file };
       });
       
-      execFile('git', ['branch', '--show-current'], { cwd: workspaceRoot }, (bErr, bStdout) => {
+      execFile('git', ['branch', '--show-current', '--'], { cwd: workspaceRoot }, (bErr, bStdout) => {
         resolve({
           isRepo: true,
           branch: bStdout.trim() || 'main',

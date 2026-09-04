@@ -8,6 +8,14 @@ export interface FileSystemItem {
   language?: string;
 }
 
+export interface ProblemItem {
+  file: string;
+  path: string;
+  line: number;
+  message: string;
+  severity: 'error' | 'warning' | 'info';
+}
+
 export interface Tab {
   path: string;
   name: string;

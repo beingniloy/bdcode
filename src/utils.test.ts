@@ -1,7 +1,99 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { updateFileContentInTree } from './utils';
-import { FileSystemItem } from './types';
+import { updateFileContentInTree, analyzeFileProblems, analyzeWorkspaceProblems } from './utils';
+import { FileSystemItem, ProblemItem } from './types';
+
+describe('analyzeFileProblems and analyzeWorkspaceProblems', () => {
+  it('should detect TODO, FIXME, empty blocks, and console.log in file content', () => {
+    const fileItem: FileSystemItem = {
+      name: 'test.js',
+      path: 'src/test.js',
+      isFolder: false,
+      content: [
+        '// TODO: implement feature',
+        '// FIXME: fix memory leak',
+        'function empty() { }',
+        'console.log("hello");',
+        'const arrow = () => {};', // Should not trigger empty block rule because of =>
+      ].join('\n'),
+    };
+
+    const problems = analyzeFileProblems(fileItem);
+    assert.equal(problems.length, 4);
+
+    const todo = problems.find(p => p.message === 'implement feature');
+    assert.ok(todo);
+    assert.equal(todo.severity, 'info');
+
+    const fixme = problems.find(p => p.message === 'fix memory leak');
+    assert.ok(fixme);
+    assert.equal(fixme.severity, 'warning');
+
+    const emptyBlock = problems.find(p => p.message === 'Empty block detected');
+    assert.ok(emptyBlock);
+    assert.equal(emptyBlock.line, 3);
+
+    const consoleLog = problems.find(p => p.message === 'Remove console.log before production');
+    assert.ok(consoleLog);
+    assert.equal(consoleLog.line, 4);
+  });
+
+  it('should analyze workspace tree and compute total problem counts', () => {
+    const workspace: FileSystemItem[] = [
+      {
+        name: 'src',
+        path: 'src',
+        isFolder: true,
+        children: [
+          {
+            name: 'a.js',
+            path: 'src/a.js',
+            isFolder: false,
+            content: 'console.log("a");\n// TODO: task a',
+          },
+          {
+            name: 'b.js',
+            path: 'src/b.js',
+            isFolder: false,
+            content: '// FIXME: urgent bug',
+          },
+        ],
+      },
+    ];
+
+    const result = analyzeWorkspaceProblems(workspace);
+    assert.equal(result.problems.length, 3);
+    assert.equal(result.counts.errors, 0);
+    assert.equal(result.counts.warnings, 2); // console.log warning + FIXME warning
+  });
+
+  it('should leverage WeakMap cache to avoid re-analyzing unchanged files', () => {
+    const file1: FileSystemItem = {
+      name: 'cached.js',
+      path: 'cached.js',
+      isFolder: false,
+      content: 'console.log("cached");',
+    };
+
+    const cache = new WeakMap<FileSystemItem, ProblemItem[]>();
+
+    // First scan populates cache
+    const firstResult = analyzeWorkspaceProblems([file1], cache);
+    assert.equal(firstResult.problems.length, 1);
+    assert.ok(cache.has(file1));
+
+    // Manually set a mock cached value to verify cache hit
+    cache.set(file1, [
+      { file: 'cached.js', path: 'cached.js', line: 1, message: 'Mocked Cache', severity: 'error' },
+    ]);
+
+    // Second scan should read from cache
+    const secondResult = analyzeWorkspaceProblems([file1], cache);
+    assert.equal(secondResult.problems.length, 1);
+    assert.equal(secondResult.problems[0].message, 'Mocked Cache');
+    assert.equal(secondResult.counts.errors, 1);
+  });
+});
 
 describe('updateFileContentInTree', () => {
   it('should update content and modified state of a file at the root level', () => {

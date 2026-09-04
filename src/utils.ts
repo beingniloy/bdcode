@@ -1,4 +1,81 @@
-import { FileSystemItem } from './types';
+import { FileSystemItem, ProblemItem } from './types';
+
+/**
+ * Analyzes a single file item for static analysis warnings/errors/info.
+ */
+export function analyzeFileProblems(item: FileSystemItem): ProblemItem[] {
+  if (item.isFolder || !item.content) return [];
+
+  const problems: ProblemItem[] = [];
+  const lines = item.content.split('\n');
+
+  lines.forEach((lineText, idx) => {
+    const lineNumber = idx + 1;
+
+    if (lineText.includes('TODO')) {
+      const todoMsg = lineText.substring(lineText.indexOf('TODO')).replace(/^TODO:?\s*/, '') || 'TODO item';
+      problems.push({ file: item.name, path: item.path, line: lineNumber, message: todoMsg, severity: 'info' });
+    }
+
+    if (lineText.includes('FIXME')) {
+      const fixmeMsg = lineText.substring(lineText.indexOf('FIXME')).replace(/^FIXME:?\s*/, '') || 'FIXME item';
+      problems.push({ file: item.name, path: item.path, line: lineNumber, message: fixmeMsg, severity: 'warning' });
+    }
+
+    if (/\{\s*\}/.test(lineText) && !lineText.includes('=>') && !lineText.includes('const')) {
+      problems.push({ file: item.name, path: item.path, line: lineNumber, message: 'Empty block detected', severity: 'warning' });
+    }
+
+    if (lineText.includes('console.log')) {
+      problems.push({ file: item.name, path: item.path, line: lineNumber, message: 'Remove console.log before production', severity: 'warning' });
+    }
+  });
+
+  return problems;
+}
+
+/**
+ * Traverses the file system tree and analyzes all files for problems,
+ * using an optional WeakMap cache to avoid re-scanning unmodified file objects.
+ */
+export function analyzeWorkspaceProblems(
+  items: FileSystemItem[],
+  cache?: WeakMap<FileSystemItem, ProblemItem[]>
+): { problems: ProblemItem[]; counts: { errors: number; warnings: number } } {
+  const problems: ProblemItem[] = [];
+  let errors = 0;
+  let warnings = 0;
+
+  const scan = (nodes: FileSystemItem[]) => {
+    for (const node of nodes) {
+      if (node.isFolder && node.children) {
+        scan(node.children);
+      } else if (!node.isFolder) {
+        let fileProblems: ProblemItem[];
+        if (cache && cache.has(node)) {
+          fileProblems = cache.get(node)!;
+        } else {
+          fileProblems = analyzeFileProblems(node);
+          if (cache) {
+            cache.set(node, fileProblems);
+          }
+        }
+
+        for (const p of fileProblems) {
+          problems.push(p);
+          if (p.severity === 'error') {
+            errors++;
+          } else if (p.severity === 'warning') {
+            warnings++;
+          }
+        }
+      }
+    }
+  };
+
+  scan(items);
+  return { problems, counts: { errors, warnings } };
+}
 
 export function findFileInTree(items: FileSystemItem[], path: string): FileSystemItem | null {
   for (const item of items) {

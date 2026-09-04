@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { updateFileContentInTree } from './utils';
+import { updateFileContentInTree, getFilePaths } from './utils';
 import { FileSystemItem } from './types';
 
 describe('updateFileContentInTree', () => {
@@ -108,5 +108,55 @@ describe('updateFileContentInTree', () => {
 
     const result = updateFileContentInTree(items, 'folder/file.js', 'content', true);
     assert.deepEqual(result, items);
+  });
+});
+
+describe('getFilePaths', () => {
+  it('should return empty array for empty items list', () => {
+    assert.deepEqual(getFilePaths([]), []);
+  });
+
+  it('should return relative file paths for flat items', () => {
+    const items: FileSystemItem[] = [
+      { name: 'file1.txt', path: 'file1.txt' },
+      { name: 'file2.txt', path: 'file2.txt' },
+    ];
+    assert.deepEqual(getFilePaths(items), ['file1.txt', 'file2.txt']);
+  });
+
+  it('should return paths recursively for nested folders', () => {
+    const items: FileSystemItem[] = [
+      {
+        name: 'src',
+        path: 'src',
+        isFolder: true,
+        children: [
+          {
+            name: 'components',
+            path: 'src/components',
+            isFolder: true,
+            children: [
+              { name: 'Button.tsx', path: 'src/components/Button.tsx' }
+            ]
+          },
+          { name: 'index.ts', path: 'src/index.ts' }
+        ]
+      },
+      { name: 'README.md', path: 'README.md' }
+    ];
+
+    assert.deepEqual(getFilePaths(items), [
+      'src/components/Button.tsx',
+      'src/index.ts',
+      'README.md'
+    ]);
+  });
+
+  it('should handle folder with undefined or empty children', () => {
+    const items: FileSystemItem[] = [
+      { name: 'emptyFolder', path: 'emptyFolder', isFolder: true },
+      { name: 'folderWithEmpty', path: 'folderWithEmpty', isFolder: true, children: [] }
+    ];
+    assert.deepEqual(getFilePaths(items), []);
   });
 });

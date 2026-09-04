@@ -108,11 +108,10 @@ export function renameItemInTree(
   });
 }
 
-export function getFilePaths(items: FileSystemItem[], currentDir = ''): string[] {
-  let list: string[] = [];
+export function getFilePaths(items: FileSystemItem[], currentDir = '', list: string[] = []): string[] {
   for (const item of items) {
     if (item.isFolder) {
-      list = [...list, ...getFilePaths(item.children || [], `${currentDir}${item.name}/`)];
+      getFilePaths(item.children || [], `${currentDir}${item.name}/`, list);
     } else {
       list.push(`${currentDir}${item.name}`);
     }

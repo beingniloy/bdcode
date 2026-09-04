@@ -1,7 +1,113 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { updateFileContentInTree } from './utils';
+import { updateFileContentInTree, saveFileInTree } from './utils';
 import { FileSystemItem } from './types';
+
+describe('saveFileInTree', () => {
+  it('should set modified to false for a targeted file at the root level', () => {
+    const items: FileSystemItem[] = [
+      {
+        name: 'index.js',
+        path: 'index.js',
+        isFolder: false,
+        content: 'console.log("hello");',
+        modified: true,
+      },
+      {
+        name: 'styles.css',
+        path: 'styles.css',
+        isFolder: false,
+        content: 'body { color: red; }',
+        modified: true,
+      },
+    ];
+
+    const result = saveFileInTree(items, 'index.js');
+
+    // Verify index.js modified state is set to false
+    assert.equal(result[0].modified, false);
+
+    // Verify styles.css modified state is unchanged
+    assert.equal(result[1].modified, true);
+  });
+
+  it('should set modified to false for a nested file deep within a folder hierarchy', () => {
+    const items: FileSystemItem[] = [
+      {
+        name: 'src',
+        path: 'src',
+        isFolder: true,
+        children: [
+          {
+            name: 'components',
+            path: 'src/components',
+            isFolder: true,
+            children: [
+              {
+                name: 'Button.tsx',
+                path: 'src/components/Button.tsx',
+                isFolder: false,
+                content: 'export const Button = () => null;',
+                modified: true,
+              }
+            ]
+          },
+          {
+            name: 'index.tsx',
+            path: 'src/index.tsx',
+            isFolder: false,
+            content: 'import "./index.css";',
+            modified: true,
+          }
+        ]
+      }
+    ];
+
+    const result = saveFileInTree(items, 'src/components/Button.tsx');
+
+    const buttonFile = result[0].children?.[0].children?.[0];
+    assert.ok(buttonFile);
+    assert.equal(buttonFile.modified, false);
+
+    // Verify index.tsx remains untouched
+    const indexFile = result[0].children?.[1];
+    assert.equal(indexFile?.modified, true);
+  });
+
+  it('should return unchanged tree if target path does not exist', () => {
+    const items: FileSystemItem[] = [
+      {
+        name: 'index.js',
+        path: 'index.js',
+        isFolder: false,
+        content: 'console.log("hello");',
+        modified: true,
+      }
+    ];
+
+    const result = saveFileInTree(items, 'non-existent.js');
+    assert.deepEqual(result, items);
+  });
+
+  it('should handle an empty items array', () => {
+    const result = saveFileInTree([], 'index.js');
+    assert.deepEqual(result, []);
+  });
+
+  it('should handle tree items with undefined children gracefully', () => {
+    const items: FileSystemItem[] = [
+      {
+        name: 'folder',
+        path: 'folder',
+        isFolder: true,
+        children: undefined
+      }
+    ];
+
+    const result = saveFileInTree(items, 'folder/file.js');
+    assert.deepEqual(result, items);
+  });
+});
 
 describe('updateFileContentInTree', () => {
   it('should update content and modified state of a file at the root level', () => {

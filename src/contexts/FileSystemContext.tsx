@@ -365,14 +365,16 @@ export function FileSystemProvider({ children }: { children: ReactNode }) {
   const handleSaveAll = useCallback(async () => {
     if (window.electronAPI) {
       try {
+        const savePromises: Promise<void>[] = [];
         for (const tab of openTabs) {
           if (tab.isDirty && tab.path !== 'welcome' && !tab.path.startsWith('docs/')) {
             const fileNode = findFileInTree(files, tab.path);
             if (fileNode) {
-              await window.electronAPI.writeFile(tab.path, fileNode.content || '');
+              savePromises.push(window.electronAPI.writeFile(tab.path, fileNode.content || ''));
             }
           }
         }
+        await Promise.all(savePromises);
         setFiles(prev => resetModified(prev));
         setOpenTabs(prev => prev.map(tab => ({ ...tab, isDirty: false })));
       } catch (err) {
